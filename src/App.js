@@ -1,15 +1,12 @@
-import logo from './logo.svg';
 import './App.scss';
+import Header from './Layouts/components/Header';
+import TableUsers from './Layouts/components/TableUsers';
 
 function App() {
     return (
-        <div className="App">
-            <header className="App-header">
-                <img src={logo} className="App-logo" alt="logo" />
-                <p>
-                    Học React
-                </p>
-            </header>
+        <div className='app-container'>
+            <Header />
+            <TableUsers />
         </div>
     );
 }
