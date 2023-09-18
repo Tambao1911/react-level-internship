@@ -16,7 +16,8 @@ function TableUsers() {
   const [dataUse, setDataUser] = useState({});
   const [dataUseDelete, setDataUserDelete] = useState({});
   const [isShowModalDelete, setIsShowModalDelete] = useState(false)
-
+  const [sortBy, setSortBy] = useState('asc')
+  const [sortField, setSortField] = useState('id')
   const handleClose = () => {
     setShowModal(false);
     setShowEditUser(false);
@@ -67,15 +68,39 @@ function TableUsers() {
     setListUsers(newListUser);
   }
 
+  const handleSort = (sortBy, sortField) => {
+    setSortBy(sortBy);
+    setSortField(sortField);
+    let newListUser = _.cloneDeep(listUsers);
+    newListUser = _.orderBy(newListUser, [sortField], [sortBy]);
+    setListUsers(newListUser)
+
+  }
   return (
     <>
       <Table striped bordered hover>
         <thead>
           <tr>
-            <th>ID</th>
+            <th>
+              ID
+              <div onClick={() => handleSort('desc', 'id')}>
+                <i className="fa-solid fa-arrow-down"></i>
+              </div>
+              <div onClick={() => handleSort('asc', 'id')}>
+                <i className="fa-solid fa-arrow-up"></i>
+              </div>
+            </th>
             <th>Email</th>
-            <th>Last Name</th>
-            <th>First Name</th>
+            <th>First Name
+            </th>
+            <th>Last Name
+              <div onClick={() => handleSort('desc', 'last_name')}>
+                <i className="fa-solid fa-arrow-down"></i>
+              </div>
+              <div onClick={() => handleSort('asc', 'last_name')}>
+                <i className="fa-solid fa-arrow-up"></i>
+              </div>
+            </th>
             <th>Actions</th>
           </tr>
         </thead>
