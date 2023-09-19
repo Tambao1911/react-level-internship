@@ -5,7 +5,7 @@ import { postCreteUser } from "../services";
 import { toast } from 'react-toastify'
 
 function ModalAddUser(props) {
-    const { show, handleClose, setShowModal, handleUpdateUser } = props;
+    const { show, handleClose, handleUpdateUser } = props;
     const [name, setName] = useState("");
     const [job, setJob] = useState("");
 
@@ -25,9 +25,7 @@ function ModalAddUser(props) {
 
     return (
         <>
-            <div>
-                <button onClick={() => setShowModal(true)}>Add</button>
-            </div>
+
             <Modal
                 show={show}
                 onHide={handleClose}

@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
-import _ from 'lodash'
+import { CSVLink } from "react-csv";
+import _, { debounce } from 'lodash'
 import Table from "react-bootstrap/Table";
+import Papa from "papaparse";
 import { FetchApiUsers } from "~/components/services/FetchApi";
 import ModalAddUser from "~/components/Modal/ModalAddNewUser";
 import ModalEditUser from "~/components/Modal/ModalEditUser";
 import ModalConfim from "~/components/Modal/ModalConfim";
+import { toast } from "react-toastify";
 
 function TableUsers() {
   const [listUsers, setListUsers] = useState([]);
@@ -16,8 +19,9 @@ function TableUsers() {
   const [dataUse, setDataUser] = useState({});
   const [dataUseDelete, setDataUserDelete] = useState({});
   const [isShowModalDelete, setIsShowModalDelete] = useState(false)
-  const [sortBy, setSortBy] = useState('asc')
-  const [sortField, setSortField] = useState('id')
+  // const [sortBy, setSortBy] = useState('asc')
+  // const [sortField, setSortField] = useState('id')
+  const [dataEport, setDataExport] = useState([])
   const handleClose = () => {
     setShowModal(false);
     setShowEditUser(false);
@@ -69,15 +73,114 @@ function TableUsers() {
   }
 
   const handleSort = (sortBy, sortField) => {
-    setSortBy(sortBy);
-    setSortField(sortField);
+    // setSortBy(sortBy);
+    // setSortField(sortField);
     let newListUser = _.cloneDeep(listUsers);
     newListUser = _.orderBy(newListUser, [sortField], [sortBy]);
     setListUsers(newListUser)
 
   }
+
+  const handleSearch = debounce((e) => {
+    let items = e.target.value;
+    if (items) {
+      let newListUser = _.cloneDeep(listUsers)
+      newListUser = newListUser.filter(item => item.email.includes(items))
+      setListUsers(newListUser)
+    } else {
+      getUsers(1)
+    }
+
+  }, 500)
+
+  const getUsersExport = (event, done) => {
+    let result = [];
+    if (listUsers && listUsers.length > 0) {
+      result.push(["Id", "Email", "First_name", "Last_name"])
+      listUsers.map(item => {
+        let arr = [];
+        arr[0] = item.id;
+        arr[1] = item.email;
+        arr[2] = item.first_name;
+        arr[3] = item.last_name;
+        result.push(arr)
+      })
+      setDataExport(result);
+      done();
+    }
+  }
+
+  const handleImportCSV = (e) => {
+    if (e.target && e.target.files && e.target.files[0]) {
+      let file = e.target.files[0];
+      if (file.type !== "text/csv") {
+        toast.error('OnLy accept csv file...')
+        return
+      }
+      Papa.parse(file, {
+        // header: true,
+        complete: function (results) {
+          let rawCSV = results.data;
+          if (rawCSV.length > 0) {
+            if (rawCSV[0] && rawCSV[0].length === 3) {
+              if (
+                rawCSV[0][0] !== "email"
+                || rawCSV[0][1] !== "first_name"
+                || rawCSV[0][2] !== "last_name"
+              ) {
+                toast.error('Wrong Format Header csv file')
+              } else {
+                let arr = [];
+                rawCSV.map((item, index) => {
+                  if (index > 0 && item.length === 3) {
+                    let obj = {};
+                    obj.email = item[0];
+                    obj.first_name = item[1];
+                    obj.last_name = item[2];
+                    arr.push(obj)
+                  }
+                })
+                setListUsers(arr)
+              }
+            } else {
+              toast.error('Wrong Format csv file')
+            }
+          }
+          else {
+            toast.error('Not Found Data')
+          }
+        }
+      })
+    }
+  }
   return (
     <>
+      <div>
+        <div className="d-flex justify-content-between">
+          <label htmlFor="file" className="btn btn-warning"><i className="fa-solid fa-file-import"></i>Import</label>
+          <input
+            id="file"
+            type="file"
+            hidden
+            onChange={(e) => handleImportCSV(e)}
+          />
+
+          <CSVLink
+            data={dataEport}
+            filename={"users.csv"}
+            className="btn btn-primary"
+            asyncOnClick={true}
+            onClick={getUsersExport}
+          ><i className="fa-solid fa-file-arrow-down"></i>Export</CSVLink>
+
+          <button onClick={() => setShowModal(true)}>Add New
+            <i className="fa-solid fa-circle-plus"></i>
+          </button>
+        </div>
+      </div >
+      <div>
+        <input placeholder="Search User By Email" onChange={(e) => handleSearch(e)} />
+      </div>
       <Table striped bordered hover>
         <thead>
           <tr>
